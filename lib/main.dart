@@ -1,6 +1,10 @@
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_swipe_action_cell/core/cell.dart';
+import 'package:flutter_swipe_action_cell/core/controller.dart';
+import 'package:flutter_vocab_topik/pref_util.dart';
 import 'package:flutter_vocab_topik/util.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data_models.dart';
 
@@ -9,15 +13,13 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Korean Vocab List'),
     );
   }
 }
@@ -35,16 +37,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _isLoading = true;
   List<VocabInfo> _medium2662List;
+  SwipeActionController _controller;
+
+  List<VocabInfo> _displayedVocabList;
+  List<int> _hiddenIndexList;
+
+  PrefManager _prefManager = PrefManager();
 
 
   @override
   void initState() {
     super.initState();
     _initData();
+
+    _controller = SwipeActionController(selectedIndexPathsChangeCallback:
+        (changedIndexPaths, selected, currentCount) {
+      setState(() {});
+    });
   }
 
   Future _initData() async {
     _medium2662List = await load2662MediumVocab();
+    _displayedVocabList = _medium2662List;
+
+    await _prefManager.init();
+    _hiddenIndexList = _prefManager.getHiddenIndexList();
+
+    _displayedVocabList.removeWhere((vocab) => _hiddenIndexList.contains(vocab.index));
+
     setState(() {
       _isLoading = false;
     });
@@ -58,25 +78,61 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: _isLoading ? Center(child: Text("Loading...")) :
         ListView.builder(
-          itemCount: _medium2662List.length,
-          itemBuilder: (context, index) => buildVocabItem(_medium2662List[index], index),
+          itemCount: _displayedVocabList.length,
+          itemBuilder: (context, index) => _buildVocabItem(_displayedVocabList[index], index),
         )
     );
   }
 
-  Widget buildVocabItem(VocabInfo vocab, int index) => ListTile(
-      onTap: () => searchInMDict(vocab.word),
-      leading: Text('$index'),
-      title: Text(vocab.word),
-      subtitle: Text(vocab.meaning ?? ''),
+  Widget _buildVocabItem(VocabInfo vocab, int index) {
+    return SwipeActionCell(
+      controller: _controller,
+      index: index,
+      key: ValueKey(vocab),
+      performsFirstActionWithFullSwipe: true,
+      leadingActions: [
+        SwipeAction(
+          title: ' +1 ',
+          onTap: (handler) async {
+            handler(false);
+            _searchInMDict('${vocab.word}1');
+          },
+        ),
+      ],
+      trailingActions: [
+        SwipeAction(
+          title: 'hide',
+          onTap: (handler) async {
+            await handler(true);
+            _hideVocab(vocab);
+          },
+        )
+      ],
+      child: ListTile(
+        onTap: () => _searchInMDict(vocab.word),
+        leading: Text('${vocab.index}'),
+        title: Text(vocab.word),
+        subtitle: Text(vocab.meaning ?? ''),
+      ),
     );
+  }
 
-  void searchInMDict(String keyword) {
+  void _hideVocab(VocabInfo vocabInfo) {
+    _hiddenIndexList.add(vocabInfo.index);
+    _prefManager.saveHiddenIndexList(_hiddenIndexList);
+
+    setState(() {
+      _displayedVocabList.remove(vocabInfo);
+    });
+  }
+
+  void _searchInMDict(String keyword) {
     final AndroidIntent intent = AndroidIntent(
       action: 'mdict.intent.action.SEARCH',
       arguments: <String, dynamic>{
         'EXTRA_QUERY': keyword,
         'EXTRA_GRAVITY': GRAVITY_BOTTOM,
+        'EXTRA_FULLSCREEN': true,
       },
     );
     intent.launch();

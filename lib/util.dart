@@ -9,8 +9,10 @@ Future<List<VocabInfo>> load2662MediumVocab() async {
 }
 
 List<VocabInfo> parseFileString(String content) =>
-    content.split('\r\n').map((line) {
+    content.split('\r\n').asMap().entries.map((entry) {
+      final index = entry.key + 1;
+      final line = entry.value;
       final items = line.split(',').toList();
-      if(items.length == 1) return VocabInfo(items[0]);
-      return VocabInfo(items[0], meaning: items[1], genre: items[2]);
+      if(items.length == 1) return VocabInfo(index, items[0]);
+      return VocabInfo(index, items[0], meaning: items[1], genre: items[2]);
     }).toList();
