@@ -1,10 +1,11 @@
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:flutter_swipe_action_cell/core/controller.dart';
 import 'package:flutter_vocab_topik/pref_util.dart';
 import 'package:flutter_vocab_topik/util.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:indexed_list_view/indexed_list_view.dart';
 
 import 'data_models.dart';
 
@@ -34,10 +35,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final scrollDirection = Axis.vertical;
 
   bool _isLoading = true;
   List<VocabInfo> _medium2662List;
-  SwipeActionController _controller;
+  SwipeActionController _swipeActionController;
+  IndexedScrollController _indexedScrollController = IndexedScrollController();
 
   List<VocabInfo> _displayedVocabList;
   List<int> _hiddenIndexList;
@@ -50,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     _initData();
 
-    _controller = SwipeActionController(selectedIndexPathsChangeCallback:
+    _swipeActionController = SwipeActionController(selectedIndexPathsChangeCallback:
         (changedIndexPaths, selected, currentCount) {
       setState(() {});
     });
@@ -75,10 +78,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
+          actions: [
+            _buildGotoButton(),
+          ],
         ),
         body: _isLoading ? Center(child: Text("Loading...")) :
-        ListView.builder(
-          itemCount: _displayedVocabList.length,
+        IndexedListView.builder(
+          controller: _indexedScrollController,
           itemBuilder: (context, index) => _buildVocabItem(_displayedVocabList[index], index),
         )
     );
@@ -86,35 +92,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildVocabItem(VocabInfo vocab, int index) {
     return SwipeActionCell(
-      controller: _controller,
-      index: index,
-      key: ValueKey(vocab),
-      performsFirstActionWithFullSwipe: true,
-      leadingActions: [
-        SwipeAction(
-          title: ' +1 ',
-          onTap: (handler) async {
-            handler(false);
-            _searchInMDict('${vocab.word}1');
-          },
+        controller: _swipeActionController,
+        index: index,
+        key: ValueKey(vocab),
+        performsFirstActionWithFullSwipe: true,
+        leadingActions: [
+          SwipeAction(
+            title: ' +1 ',
+            onTap: (handler) async {
+              handler(false);
+              _searchInMDict('${vocab.word}1');
+            },
+          ),
+        ],
+        trailingActions: [
+          SwipeAction(
+            title: 'hide',
+            onTap: (handler) async {
+              await handler(true);
+              _hideVocab(vocab);
+            },
+          )
+        ],
+        child: ListTile(
+          onTap: () => _searchInMDict(vocab.word),
+          leading: Text('${index+1}'),
+          title: Text(vocab.word, style: Theme.of(context).textTheme.headline4,),
+          subtitle: Text('${vocab.index} ${vocab.meaning}' ?? ''),
         ),
-      ],
-      trailingActions: [
-        SwipeAction(
-          title: 'hide',
-          onTap: (handler) async {
-            await handler(true);
-            _hideVocab(vocab);
-          },
-        )
-      ],
-      child: ListTile(
-        onTap: () => _searchInMDict(vocab.word),
-        leading: Text('${vocab.index}'),
-        title: Text(vocab.word),
-        subtitle: Text(vocab.meaning ?? ''),
-      ),
-    );
+      );
   }
 
   void _hideVocab(VocabInfo vocabInfo) {
@@ -136,6 +142,35 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
     intent.launch();
+  }
+
+  Widget _buildGotoButton() => IconButton(
+      icon: Icon(Icons.fast_forward),
+      onPressed: () => _showGotoDialog(),
+    );
+
+  Future _showGotoDialog() async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Input Index'),
+            content: TextField(
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              onSubmitted: (value) {
+                final foundIndex = _displayedVocabList.indexWhere((vocab) => vocab.index >= int.parse(value));
+                _indexedScrollController.jumpToIndex(foundIndex);
+                Navigator.of(context).pop();
+              },
+              //controller: _textFieldController,
+              decoration: InputDecoration(hintText: "Jump to Index"),
+            ),
+          );
+        });
   }
 }
 
