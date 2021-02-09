@@ -27,6 +27,7 @@ class _VocabItemWidgetState extends State<VocabItemWidget> {
     final vocab = widget.vocab;
     final subtitle =  _isShowMeaning ? '${vocab.meaning ?? ''}' : '${vocab.index} ';
     return ListTile(
+      tileColor: Colors.white,
       onTap: () => _showMeaningWithTimer(),
       onLongPress: () => widget.longPressVocabInfo(vocab),
       leading: Text('${widget.index+1}'),
