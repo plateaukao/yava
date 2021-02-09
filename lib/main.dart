@@ -1,6 +1,7 @@
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:flutter_swipe_action_cell/core/controller.dart';
 import 'package:flutter_vocab_topik/pref_util.dart';
@@ -8,6 +9,8 @@ import 'package:flutter_vocab_topik/util.dart';
 import 'package:indexed_list_view/indexed_list_view.dart';
 
 import 'data_models.dart';
+import 'search_util.dart';
+import 'ui/vocab_item_widget.dart';
 
 void main() {
   runApp(MyApp());
@@ -74,8 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           title: Text(widget.title),
           actions: [
@@ -85,43 +88,65 @@ class _MyHomePageState extends State<MyHomePage> {
         body: _isLoading ? Center(child: Text("Loading...")) :
         IndexedListView.builder(
           controller: _indexedScrollController,
-          itemBuilder: (context, index) => _buildVocabItem(_displayedVocabList[index], index),
+          itemBuilder: (context, index) => index < 0 ? null : _buildVocabItem(_displayedVocabList[index], index),
         )
     );
-  }
 
   Widget _buildVocabItem(VocabInfo vocab, int index) {
     return SwipeActionCell(
-        controller: _swipeActionController,
-        index: index,
-        key: ValueKey(vocab),
-        performsFirstActionWithFullSwipe: true,
-        leadingActions: [
-          SwipeAction(
-            title: ' +1 ',
-            onTap: (handler) async {
-              handler(false);
-              _searchInMDict('${vocab.word}1');
-            },
-          ),
-        ],
-        trailingActions: [
-          SwipeAction(
-            title: 'hide',
-            onTap: (handler) async {
-              await handler(true);
-              _hideVocab(vocab);
-            },
-          )
-        ],
-        child: ListTile(
-          onTap: () => _searchInMDict(vocab.word),
-          leading: Text('${index+1}'),
-          title: Text(vocab.word, style: Theme.of(context).textTheme.headline4,),
-          subtitle: Text('${vocab.index} ${vocab.meaning}' ?? ''),
-        ),
-      );
+      controller: _swipeActionController,
+      index: index,
+      key: ValueKey(vocab),
+      performsFirstActionWithFullSwipe: true,
+      leadingActions: [
+        _swipeActionSearchPlusOne(vocab),
+      ],
+      trailingActions: [
+        _swipeActionHide(vocab),
+        _swipeActionSearchImage(vocab),
+        _swipeActionSearchNaver(vocab),
+      ],
+      child: VocabItemWidget(
+        vocab,
+        index,
+            (vocab) => searchInMDict(vocab.word),
+      ),
+    );
   }
+
+  SwipeAction _swipeActionHide(VocabInfo vocab) => SwipeAction(
+        icon: whiteIcon(Icons.done),
+        onTap: (handler) async {
+          await handler(true);
+          _hideVocab(vocab);
+        },
+      );
+
+  SwipeAction _swipeActionSearchImage(VocabInfo vocab) => SwipeAction(
+        icon: whiteIcon(Icons.image_search),
+        onTap: (handler) async {
+          searchInGoogleImage(vocab.word);
+          handler(false);
+        },
+      );
+
+  SwipeAction _swipeActionSearchNaver(VocabInfo vocab) => SwipeAction(
+    icon: whiteIcon(Icons.menu_book_rounded),
+    onTap: (handler) async {
+      searchInNaverDict(vocab.word);
+      handler(false);
+    },
+  );
+
+  SwipeAction _swipeActionSearchPlusOne(VocabInfo vocab) => SwipeAction(
+        icon: whiteIcon(Icons.plus_one),
+        onTap: (handler) async {
+          searchInMDict('${vocab.word}1');
+          handler(false);
+        },
+      );
+
+  Icon whiteIcon(IconData iconData) => Icon(iconData, color: Colors.white);
 
   void _hideVocab(VocabInfo vocabInfo) {
     _hiddenIndexList.add(vocabInfo.index);
@@ -130,18 +155,6 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _displayedVocabList.remove(vocabInfo);
     });
-  }
-
-  void _searchInMDict(String keyword) {
-    final AndroidIntent intent = AndroidIntent(
-      action: 'mdict.intent.action.SEARCH',
-      arguments: <String, dynamic>{
-        'EXTRA_QUERY': keyword,
-        'EXTRA_GRAVITY': GRAVITY_BOTTOM,
-        'EXTRA_FULLSCREEN': true,
-      },
-    );
-    intent.launch();
   }
 
   Widget _buildGotoButton() => IconButton(
@@ -174,5 +187,3 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-const int GRAVITY_TOP = 48;
-const int GRAVITY_BOTTOM = 80;
