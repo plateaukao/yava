@@ -31,15 +31,17 @@ class _VocabItemWidgetState extends State<VocabItemWidget> {
       onTap: () => _showMeaningWithTimer(),
       onLongPress: () => widget.longPressVocabInfo(vocab),
       leading: Text('${widget.index+1}'),
+      trailing: _buildSearchIcon(),
       title: Text(vocab.word, style: Theme.of(context).textTheme.headline4.copyWith(color: Colors.black),),
       subtitle: Container(height: 20, child: Text(subtitle)),
     );
   }
 
+  Widget _buildSearchIcon() =>
+      IconButton(icon: Icon(Icons.info_outline_rounded), onPressed: () => widget.longPressVocabInfo(widget.vocab));
+
   void _showMeaningWithTimer() {
-    setState(() {
-      _isShowMeaning = true;
-    });
+    setState(() => _isShowMeaning = true);
 
     Timer(Duration(seconds: 1), () {
       setState(() => _isShowMeaning = false);
