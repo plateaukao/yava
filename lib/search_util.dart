@@ -1,5 +1,6 @@
 
 import 'package:android_intent/android_intent.dart';
+import 'package:android_intent/flag.dart';
 import 'package:sprintf/sprintf.dart';
 
 const int GRAVITY_TOP = 48;
@@ -7,11 +8,10 @@ const int GRAVITY_BOTTOM = 80;
 
 void searchInMDict(String keyword) {
   final AndroidIntent intent = AndroidIntent(
-    action: 'mdict.intent.action.SEARCH',
+    action: 'mdict.intent.action.MUITL_WIN_SEARCH',
+    flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
     arguments: <String, dynamic>{
-      'EXTRA_QUERY': keyword,
-      'EXTRA_GRAVITY': GRAVITY_BOTTOM,
-      'EXTRA_FULLSCREEN': true,
+      'HEADWORD': keyword,
     },
   );
   intent.launch();
