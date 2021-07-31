@@ -102,8 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
       trailingActions: [
         _swipeActionHide(vocab),
-        _swipeActionSearchImage(vocab),
-        _swipeActionSearchNaver(vocab),
       ],
       child: VocabItemWidget(
         vocab,
@@ -120,22 +118,6 @@ class _MyHomePageState extends State<MyHomePage> {
           _hideVocab(vocab);
         },
       );
-
-  SwipeAction _swipeActionSearchImage(VocabInfo vocab) => SwipeAction(
-        icon: whiteIcon(Icons.image_search),
-        onTap: (handler) async {
-          searchInGoogleImage(vocab.word);
-          handler(false);
-        },
-      );
-
-  SwipeAction _swipeActionSearchNaver(VocabInfo vocab) => SwipeAction(
-    icon: whiteIcon(Icons.menu_book_rounded),
-    onTap: (handler) async {
-      searchInNaverDict(vocab.word);
-      handler(false);
-    },
-  );
 
   SwipeAction _swipeActionSearchPlusOne(VocabInfo vocab) => SwipeAction(
         icon: whiteIcon(Icons.plus_one),

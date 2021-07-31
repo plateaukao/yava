@@ -9,7 +9,7 @@ const int GRAVITY_BOTTOM = 80;
 void searchInMDict(String keyword) {
   final AndroidIntent intent = AndroidIntent(
     action: 'mdict.intent.action.MUITL_WIN_SEARCH',
-    flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+    flags: [Flag.FLAG_ACTIVITY_LAUNCH_ADJACENT, Flag.FLAG_ACTIVITY_NEW_TASK],
     arguments: <String, dynamic>{
       'HEADWORD': keyword,
     },
@@ -26,6 +26,7 @@ void searchInWebNaverDict(String keyword) {
 void searchInNaverDict(String keyword) {
   final AndroidIntent intent = AndroidIntent(
     action: 'colordict.intent.action.SEARCH',
+    flags: [Flag.FLAG_ACTIVITY_LAUNCH_ADJACENT, Flag.FLAG_ACTIVITY_NEW_TASK],
     arguments: <String, dynamic>{
       'EXTRA_QUERY': keyword,
       'EXTRA_GRAVITY': GRAVITY_BOTTOM,
@@ -38,6 +39,7 @@ void searchInNaverDict(String keyword) {
 void _searchInWeb(String keyword, String formatString) {
   AndroidIntent intent = AndroidIntent(
     action: 'action_view',
+    flags: [Flag.FLAG_ACTIVITY_LAUNCH_ADJACENT, Flag.FLAG_ACTIVITY_NEW_TASK],
     data: Uri.encodeFull(sprintf(formatString, [keyword])),
   );
   intent.launch();

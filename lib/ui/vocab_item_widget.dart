@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_vocab_topik/search_util.dart';
 
 import '../data_models.dart';
 
@@ -31,14 +32,31 @@ class _VocabItemWidgetState extends State<VocabItemWidget> {
       onTap: () => _showMeaningWithTimer(),
       onLongPress: () => widget.longPressVocabInfo(vocab),
       leading: Text('${widget.index+1}'),
-      trailing: _buildSearchIcon(),
+      trailing: _trailingActions(),
       title: Text(vocab.word, style: Theme.of(context).textTheme.headline4.copyWith(color: Colors.black),),
       subtitle: Container(height: 20, child: Text(subtitle)),
     );
   }
 
-  Widget _buildSearchIcon() =>
-      IconButton(icon: Icon(Icons.info_outline_rounded), onPressed: () => widget.longPressVocabInfo(widget.vocab));
+  Widget _trailingActions() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildMdictIcon(),
+        _buildNaverIcon(),
+        _buildImageSearchIcon(),
+      ],
+    );
+  }
+
+  Widget _buildMdictIcon() =>
+      IconButton(icon: Icon(Icons.info_outline_rounded), onPressed: () => searchInMDict(widget.vocab.word));
+
+  Widget _buildImageSearchIcon() =>
+      IconButton(icon: Icon(Icons.image_search), onPressed: () => searchInGoogleImage(widget.vocab.word));
+
+  Widget _buildNaverIcon() =>
+      IconButton(icon: Icon(Icons.menu_book_rounded), onPressed: () => searchInNaverDict(widget.vocab.word));
 
   void _showMeaningWithTimer() {
     setState(() => _isShowMeaning = true);
