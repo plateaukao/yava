@@ -71,6 +71,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _displayedVocabList.removeWhere((vocab) => _hiddenIndexList.contains(vocab.index));
 
+    if (_prefManager.getShouldShuffle()) {
+      _displayedVocabList.shuffle();
+    }
+
     setState(() {
       _isLoading = false;
     });
@@ -82,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           actions: [
             _buildGotoButton(),
+            _buildShuffle(),
           ],
         ),
         body: _isLoading ? Center(child: Text("Loading...")) :
@@ -143,6 +148,11 @@ class _MyHomePageState extends State<MyHomePage> {
       onPressed: () => _showGotoDialog(),
     );
 
+  Widget _buildShuffle() => IconButton(
+    icon: Icon(Icons.shuffle),
+    onPressed: () => _toggleShuffle(),
+  );
+
   Future _showGotoDialog() async {
     return showDialog(
         context: context,
@@ -165,6 +175,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           );
         });
+  }
+
+  void _toggleShuffle() {
+    _prefManager.setShouldShuffle(!_prefManager.getShouldShuffle());
+    _initData();
   }
 }
 

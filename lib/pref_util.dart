@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefManager {
   static const String _keyHiddenIndex = 'key_hidden_index';
+  static const String _keyShouldShuffle = 'key_should_shuffle';
   static const String _hiddenIndexSeparator = ':';
 
   SharedPreferences _prefs;
@@ -24,5 +25,11 @@ class PrefManager {
   void saveHiddenIndexList(List<int> indexList) {
     final concatString = indexList.join(_hiddenIndexSeparator);
     _prefs.setString(_keyHiddenIndex, concatString);
+  }
+
+  bool getShouldShuffle() => _prefs.getBool(_keyShouldShuffle) ?? false;
+
+  void setShouldShuffle(bool shouldShuffle) {
+    _prefs.setBool(_keyShouldShuffle, shouldShuffle);
   }
 }
