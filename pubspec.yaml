@@ -25,6 +25,8 @@ dependencies:
 
   sprintf: ^6.0.0
 
+  url_launcher: ^6.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
